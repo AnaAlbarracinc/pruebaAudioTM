@@ -9,8 +9,12 @@
 </head>
 <body>
   <h4 style="display:none">TM Audio bridge</h4>
+
+  <!-- Botón para iniciar el micrófono -->
+  <button id="startButton">Iniciar micrófono</button>
+
   <script>
-    // --- CONFIG: URL de tu modelo Teachable Machine ---
+    // --- CONFIG: URL de tu modelo Teachable Machine (raw) ---
     const MODEL_URL = "https://raw.githubusercontent.com/AnaAlbarracinc/pruebaAudioTM/main/model/";
 
     let recognizer;
@@ -19,75 +23,4 @@
     async function initModel() {
       try {
         recognizer = await tmSpeech.create(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
-        console.log("Modelo cargado");
-      } catch (e) {
-        console.error("Error cargando modelo:", e);
-        sendToApp("ERROR::" + (e && e.message ? e.message : e));
-      }
-    }
-
-    function sendToApp(text) {
-      try {
-        if (window.AppInventor && window.AppInventor.setWebViewString) {
-          window.AppInventor.setWebViewString(text);
-        } else if (window.appinventor && window.appinventor.setWebViewString) {
-          window.appinventor.setWebViewString(text);
-        } else {
-          console.log("No AppInventor bridge:", text);
-        }
-      } catch (err) {
-        console.error("setWebViewString error", err);
-      }
-    }
-
-    async function startListening() {
-      if (!recognizer) {
-        await initModel();
-        if (!recognizer) {
-          sendToApp("ERROR::Model not loaded");
-          return;
-        }
-      }
-      if (isListening) return;
-      isListening = true;
-
-      try {
-        await recognizer.ensureModelLoaded();
-        await recognizer.listen(result => {
-          const scores = result.scores;
-          let maxIndex = 0;
-          let maxVal = scores[0] || 0;
-          for (let i = 1; i < scores.length; i++) {
-            if (scores[i] > maxVal) { maxVal = scores[i]; maxIndex = i; }
-          }
-          const label = recognizer.wordLabels()[maxIndex] || "unknown";
-          const confidence = (maxVal).toFixed(3);
-          const payload = label + "::" + confidence;
-          sendToApp(payload);
-        }, {
-          probabilityThreshold: 0.01
-        });
-      } catch (err) {
-        console.error("listen error", err);
-        sendToApp("ERROR::" + (err && err.message ? err.message : err));
-        isListening = false;
-      }
-    }
-
-    function stopListening() {
-      if (recognizer && isListening) {
-        recognizer.stopListening();
-      }
-      isListening = false;
-    }
-
-    window.addEventListener('load', async () => {
-      initModel();
-      // startListening(); // descomenta si quieres que empiece al cargar
-    });
-
-    window.TMApp = { initModel, startListening, stopListening };
-  </script>
-</body>
-</html>
-
+        console.
