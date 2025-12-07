@@ -7,6 +7,17 @@ const URL = "https://teachablemachine.withgoogle.com/models/OCmF1CcyK/";
 let recognizer = null;
 let listening = false;
 
+// Pedir permiso de micrófono al cargar la página
+window.addEventListener("load", async () => {
+    try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("Permiso de micrófono concedido");
+    } catch (err) {
+        console.log("Permiso de micrófono denegado", err);
+        alert("Necesitas permitir el micrófono para usar la app.");
+    }
+});
+
 async function createModel() {
     if (!recognizer) {
         const checkpointURL = URL + "model.json";
@@ -51,7 +62,7 @@ async function startListening() {
         }
     }, {
         includeSpectrogram: false,
-        probabilityThreshold: 0.4,  // probabilidad mínima para disparar
+        probabilityThreshold: 0.4,
         invokeCallbackOnNoiseAndUnknown: true,
         overlapFactor: 0.5
     });
