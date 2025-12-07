@@ -4,45 +4,61 @@
 
 <script type="text/javascript">
 const URL = "https://teachablemachine.withgoogle.com/models/OCmF1CcyK/";
+let recognizer = null;
+let listening = false;
 
 async function createModel() {
-    const checkpointURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
+    if (!recognizer) {
+        const checkpointURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
 
-    const recognizer = speechCommands.create(
-        "BROWSER_FFT",
-        undefined,
-        checkpointURL,
-        metadataURL
-    );
+        recognizer = speechCommands.create(
+            "BROWSER_FFT",
+            undefined,
+            checkpointURL,
+            metadataURL
+        );
 
-    await recognizer.ensureModelLoaded();
+        await recognizer.ensureModelLoaded();
+    }
     return recognizer;
 }
 
-async function init() {
-    const recognizer = await createModel();
-    const classLabels = recognizer.wordLabels();
+async function startListening() {
+    await createModel();
+    if (listening) return;
+
+    listening = true;
 
     recognizer.listen(result => {
+        if (!listening) return;
+
         const scores = result.scores;
         let maxScore = 0;
         let detectedClass = "";
-        for (let i = 0; i < classLabels.length; i++) {
+        const labels = recognizer.wordLabels();
+
+        for (let i = 0; i < labels.length; i++) {
             if (scores[i] > maxScore) {
                 maxScore = scores[i];
-                detectedClass = classLabels[i];
+                detectedClass = labels[i];
             }
         }
-        // Envía el resultado a App Inventor
-        if (maxScore > 0.75) {
+
+        // Sensibilidad más alta: probabilidad mínima 0.4
+        if (maxScore > 0.4) {
             window.AppInventor.setWebViewString(detectedClass);
         }
     }, {
         includeSpectrogram: false,
-        probabilityThreshold: 0.75,
+        probabilityThreshold: 0.4,  // probabilidad mínima para disparar
         invokeCallbackOnNoiseAndUnknown: true,
         overlapFactor: 0.5
     });
+}
+
+function stopListening() {
+    listening = false;
+    if (recognizer) recognizer.stopListening();
 }
 </script>
